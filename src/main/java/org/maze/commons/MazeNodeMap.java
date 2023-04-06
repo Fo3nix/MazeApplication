@@ -6,35 +6,66 @@ import java.util.List;
 
 public class MazeNodeMap {
 
-    // 2D hashmaps with x and y coordinates of mazenodes as keys. 1 hashmap for each quadrant.
-    private final HashMap<Integer, HashMap<Integer, MazeNode>> mazeNodeMap;
+    // 2D map with x and y coordinates of mazenodes as keys. 1 hashmap for each quadrant.
+    private MazeNode[][] mazeNodeMap;
 
     public MazeNodeMap(MazeNode origin) {
-        mazeNodeMap = new HashMap<>();
+        mazeNodeMap = new MazeNode[20][20];
 
-        // Add origin to all quadrants
-        mazeNodeMap.put(origin.getX(), new HashMap<>());
-        mazeNodeMap.get(origin.getX()).put(origin.getY(), origin);
+        mazeNodeMap[0][0] = origin;
+    }
+
+    public MazeNodeMap(MazeNode origin, int size) {
+        mazeNodeMap = new MazeNode[size][size];
+
+        mazeNodeMap[0][0] = origin;
+    }
+
+    private int translateCoordinate(int c){
+        int returnIndex = 0;
+
+        if(c<0){
+            returnIndex = c*-2 -1;
+        }
+        else{
+            returnIndex = c*2;
+        }
+
+        return returnIndex;
+    }
+
+    private void enlargeMap(){
+        int size = mazeNodeMap.length*2;
+
+        MazeNode[][] newMap = new MazeNode[size][size];
+
+        for(int x = 0; x < mazeNodeMap.length; x++){
+            for(int y = 0; y < mazeNodeMap[x].length; y++){
+                newMap[x][y] = mazeNodeMap[x][y];
+            }
+        }
+
+        mazeNodeMap = newMap;
     }
 
     public MazeNode getMazeNodeAt(int x, int y) {
 
-        MazeNode returnNode = null;
+        x = translateCoordinate(x);
+        y = translateCoordinate(y);
 
-        if (mazeNodeMap.containsKey(x)) {
-            if (mazeNodeMap.get(x).containsKey(y)) {
-                returnNode = mazeNodeMap.get(x).get(y);
-            }
+        if(x >= mazeNodeMap.length || y >= mazeNodeMap[x].length){
+            enlargeMap();
         }
 
-        return returnNode;
+        return mazeNodeMap[x][y];
     }
 
     public boolean addMazeNode(MazeNode node){
         if(getMazeNodeAt(node.getX(), node.getY()) == null){
 
-            mazeNodeMap.computeIfAbsent(node.getX(), k -> new HashMap<>());
-            mazeNodeMap.get(node.getX()).put(node.getY(), node);
+            int x = translateCoordinate(node.getX());
+            int y = translateCoordinate(node.getY());
+            mazeNodeMap[x][y] = node;
             return true;
         }
         return false;
@@ -84,21 +115,33 @@ public class MazeNodeMap {
         return returnList;
     }
 
-    public void moveMazeNodeTo(MazeNode node, int i, int y) {
-        Boolean nodeExists = false;
-        if(mazeNodeMap.containsKey(node.getX())){
-            if(mazeNodeMap.get(node.getX()).containsKey(node.getY())){
-                if(mazeNodeMap.get(node.getX()).get(node.getY()) == node){
-                    nodeExists = true;
-                }
-            }
-        }
-
-        if(getMazeNodeAt(i, y) == null && nodeExists){
-            mazeNodeMap.get(node.getX()).remove(node.getY());
-            node.setX(i);
+    public void moveMazeNodeTo(MazeNode node, int x, int y) {
+        if(getMazeNodeAt(node.getX(), node.getY()) != null){
+            int oldX = node.getX();
+            int oldY = node.getY();
+            node.setX(x);
             node.setY(y);
-            mazeNodeMap.get(node.getX()).put(node.getY(), node);
+
+            if(addMazeNode(node)){
+                removeMazeNodeAt(oldX, oldY);
+            }
+            else{
+                node.setX(oldX);
+                node.setY(oldY);
+            }
+
+
         }
+    }
+
+    private boolean removeMazeNodeAt(int oldX, int oldY) {
+        int x = translateCoordinate(oldX);
+        int y = translateCoordinate(oldY);
+
+        if(mazeNodeMap[x][y] != null){
+            mazeNodeMap[x][y] = null;
+            return true;
+        }
+        return false;
     }
 }

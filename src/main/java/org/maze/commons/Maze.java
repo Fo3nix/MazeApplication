@@ -19,6 +19,13 @@ public class Maze {
         mazeNodeMap = new MazeNodeMap(origin);
     }
 
+    public Maze(int size) {
+        this.origin = new MazeNode(0,0);
+        mazeNodeList = new ArrayList<>();
+        mazeNodeList.add(origin);
+        mazeNodeMap = new MazeNodeMap(origin, size);
+    }
+
     public MazeNode getOrigin() {
         return origin;
     }
@@ -315,7 +322,13 @@ public class Maze {
     }
 
     public static Maze generateRectangularMaze(int distanceFromOriginLeft, int distanceFromOriginRight, int distanceFromOriginUp, int distanceFromOriginDown){
-        Maze maze = new Maze();
+
+        //size is maximum distance from origin in any direction
+        int size = Math.max(distanceFromOriginLeft, distanceFromOriginRight);
+        size = Math.max(size, distanceFromOriginUp);
+        size = Math.max(size, distanceFromOriginDown);
+
+        Maze maze = new Maze(size*2+1);
         MazeNode horizontalNode = maze.getOrigin();
         MazeNode verticalNode = maze.getOrigin();
 
@@ -344,7 +357,7 @@ public class Maze {
     }
 
     public static Maze generateCircularMaze(int distanceFromOrigin){
-        Maze maze = new Maze();
+        Maze maze = new Maze(distanceFromOrigin*2+1);
         MazeNode horizontalNode = maze.getOrigin();
 
         // Fill up from origin
@@ -407,8 +420,41 @@ public class Maze {
         currentNode.setWall(false);
 
         int pathMaxLength = (int) (maze.getAverageRowSize() / 5);
+        List<String> directions = List.of("up", "down", "left", "right");
 
         // TODO: generate paths using algorithm
+        List<MazeNode> availableNodes = new ArrayList<MazeNode>();
+
+        while(availableNodes.size()!=0){
+
+            availableNodes.remove(0);
+
+            int pathLength = (int) (Math.random() * pathMaxLength);
+            String direction = directions.get((int) (Math.random() * (directions.size()-1)));
+
+            for(int i = 0; i < pathLength; i++){
+                MazeNode previousNode = currentNode;
+                currentNode = currentNode.getNodeInDirection(direction);
+                availableNodes.add(currentNode);
+
+                if(pathingPossible(currentNode, previousNode)){
+                    currentNode.setWall(false);
+
+                }
+                else{
+                    break;
+                }
+            }
+
+            if(!pathingPossible(currentNode)){
+                availableNodes.remove(currentNode);
+            }
+
+            int randomIndex = (int) (Math.random() * (availableNodes.size()-1));
+            currentNode = availableNodes.get(randomIndex);
+
+        }
+
 
         maze.getExit().setWall(false);
 
