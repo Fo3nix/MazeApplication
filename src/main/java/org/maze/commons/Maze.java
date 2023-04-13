@@ -416,6 +416,7 @@ public class Maze {
     public static void generateMazePaths(Maze maze){
         maze.generateEntranceAndExit();;
 
+        MazeNode previousNode = null;
         MazeNode currentNode = maze.getEntrance();
         currentNode.setWall(false);
 
@@ -424,16 +425,15 @@ public class Maze {
 
         // TODO: generate paths using algorithm
         List<MazeNode> availableNodes = new ArrayList<MazeNode>();
+        availableNodes.add(currentNode);
 
         while(availableNodes.size()!=0){
-
-            availableNodes.remove(0);
 
             int pathLength = (int) (Math.random() * pathMaxLength);
             String direction = directions.get((int) (Math.random() * (directions.size()-1)));
 
             for(int i = 0; i < pathLength; i++){
-                MazeNode previousNode = currentNode;
+                previousNode = currentNode;
                 currentNode = currentNode.getNodeInDirection(direction);
                 availableNodes.add(currentNode);
 
@@ -446,7 +446,7 @@ public class Maze {
                 }
             }
 
-            if(!pathingPossible(currentNode)){
+            if(!pathingPossible(currentNode, null)){
                 availableNodes.remove(currentNode);
             }
 
@@ -458,6 +458,28 @@ public class Maze {
 
         maze.getExit().setWall(false);
 
+    }
+
+    private static boolean pathingPossible(MazeNode currentNode, MazeNode previousNode) {
+        if(currentNode == null){
+            return false;
+        }
+
+        List<MazeNode> surroundingNodes = currentNode.getSurroundingNodes();
+        surroundingNodes.remove(previousNode);
+        surroundingNodes.removeAll(previousNode.getAdjacentPaths());
+
+        if(surroundingNodes.size()>8 || surroundingNodes.size()<6){
+            return false;
+        }
+
+        for (MazeNode node : surroundingNodes) {
+            if(!node.isWall()){
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private int getAverageRowSize() {

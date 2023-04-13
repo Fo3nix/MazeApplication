@@ -1,6 +1,7 @@
 package org.maze.commons;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
@@ -134,6 +135,42 @@ public class MazeNode {
             returnList.add(down);
         }
 
+        return returnList;
+    }
+
+    public MazeNode getNodeInDirection(String direction) {
+        return switch (direction) {
+            case "up" -> up;
+            case "down" -> down;
+            case "left" -> left;
+            case "right" -> right;
+            default -> null;
+        };
+    }
+
+    public List<MazeNode> getSurroundingNodes() {
+        List<MazeNode> returnList = new ArrayList<>();
+
+        returnList.addAll(this.getAdjacentNodes());
+        if(right.hasUp()){
+            returnList.add(right.getUp());
+        }
+        if(right.hasDown()){
+            returnList.add(right.getDown());
+        }
+        if(left.hasUp()){
+            returnList.add(left.getUp());
+        }
+        if(left.hasDown()){
+            returnList.add(left.getDown());
+        }
+
+        return returnList;
+    }
+
+    public Collection<MazeNode> getAdjacentPaths() {
+        List<MazeNode> returnList = this.getAdjacentNodes();
+        returnList.removeIf(MazeNode::isWall);
         return returnList;
     }
 }

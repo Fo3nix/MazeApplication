@@ -15,7 +15,7 @@ public class MazeVisualizer extends Application {
     @Override
     public void start(Stage stage) {
 
-        Maze maze = Maze.generateCircularMaze(100);
+        Maze maze = Maze.generateCircularMaze(20);
         Maze.generateMazePaths(maze);
         Scene scene = parseMaze(maze);
 
