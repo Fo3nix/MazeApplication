@@ -151,16 +151,16 @@ public class MazeNode {
     public List<MazeNode> getSurroundingNodes() {
 
         List<MazeNode> returnList = new ArrayList<>(this.getAdjacentNodes());
-        if(right!=null && right.hasUp()){
+        if(right!=null && right.hasUp() && right.getUp()!=null){
             returnList.add(right.getUp());
         }
-        if(right!=null && right.hasDown()){
+        if(right!=null && right.hasDown() && right.getDown()!=null){
             returnList.add(right.getDown());
         }
-        if(left!=null && left.hasUp()){
+        if(left!=null && left.hasUp() && left.getUp()!=null){
             returnList.add(left.getUp());
         }
-        if(left!=null && left.hasDown()){
+        if(left!=null && left.hasDown() && left.getDown()!=null){
             returnList.add(left.getDown());
         }
 

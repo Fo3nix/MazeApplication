@@ -1,6 +1,9 @@
 package org.maze.commons;
 
+import javafx.util.Pair;
+
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -69,6 +72,11 @@ public class Maze {
         int distanceY = Math.abs(exitY - entranceY);
 
         if(distanceX <= 2 || distanceY <= 2){
+            generateEntranceAndExit();
+        }
+
+        // if exit has not both vertical or horizontal neighber, generate new exit
+        if((this.getExit().getUp() == null &&  this.getExit().getDown() != null) || (this.getExit().getUp() != null &&  this.getExit().getDown() == null)){
             generateEntranceAndExit();
         }
     }
@@ -416,11 +424,91 @@ public class Maze {
     public static void generateMazePaths(Maze maze){
         maze.generateEntranceAndExit();;
 
+        maze.getEntrance().setWall(false);
+
+        int pathMaxLength = (int) (maze.getAverageRowSize() / 10);
+        List<String> directions = List.of("up", "down", "left", "right");
+
+        List<Pair<MazeNode, String>> availablePathing = new ArrayList<>(getAvailablePathing(maze.getEntrance()));
+
+        while(availablePathing.size() != 0){
+            int pathLength = (int) (Math.random() * pathMaxLength);
+
+            int randomIndex = (int) (Math.random() * (availablePathing.size()-1));
+            Pair<MazeNode, String> currentPair = availablePathing.remove(randomIndex);
+
+            if(pathingPossible(currentPair.getKey().getNodeInDirection(currentPair.getValue()), currentPair.getKey())){
+                currentPair.getKey().getNodeInDirection(currentPair.getValue()).setWall(false);
+                availablePathing.addAll(getAvailablePathing(currentPair.getKey().getNodeInDirection(currentPair.getValue())));
+            }
+
+            // TODO: Use pathlength
+
+            
+            /*
+            for(int i = 0; i < pathLength; i++){
+                currentPair.getKey().getNodeInDirection(currentPair.getValue()).setWall(false);
+                List<Pair<MazeNode, String>> availablePathingNewNode = getAvailablePathing(currentPair.getKey().getNodeInDirection(currentPair.getValue()));
+
+                String direction = currentPair.getValue();
+
+                currentPair = null;
+                for(Pair<MazeNode, String> pair : availablePathingNewNode){
+                    if(pair.getValue().equals(direction) && i==pathLength-1){
+                        currentPair = pair;
+                    }
+                    else{
+                        availablePathing.add(pair);
+                    }
+                }
+
+                if(currentPair == null){
+                    break;
+                }
+
+            }
+             */
+
+            System.out.println("availablePathing.size() = " + availablePathing.size());
+
+        }
+
+        maze.getExit().setWall(false);
+
+    }
+
+    private static List<Pair<MazeNode, String>> getAvailablePathing(MazeNode node) {
+        if(node==null){
+            return null;
+        }
+
+        List<Pair<MazeNode, String>> availablePathing = new ArrayList<Pair<MazeNode, String>>();
+
+        if(node.getUp()!=null && node.getUp().isWall() && pathingPossible(node.getUp(), node)){
+            availablePathing.add(new Pair<MazeNode, String>(node, "up"));
+        }
+        if(node.getDown()!=null && node.getDown().isWall() && pathingPossible(node.getDown(), node)){
+            availablePathing.add(new Pair<MazeNode, String>(node, "down"));
+        }
+        if(node.getLeft()!=null && node.getLeft().isWall() && pathingPossible(node.getLeft(), node)){
+            availablePathing.add(new Pair<MazeNode, String>(node, "left"));
+        }
+        if(node.getRight()!=null && node.getRight().isWall() && pathingPossible(node.getRight(), node)){
+            availablePathing.add(new Pair<MazeNode, String>(node, "right"));
+        }
+
+        return availablePathing;
+
+    }
+
+    public static void generateMazePaths2(Maze maze){
+        maze.generateEntranceAndExit();;
+
         MazeNode previousNode = null;
         MazeNode currentNode = maze.getEntrance();
         currentNode.setWall(false);
 
-        int pathMaxLength = (int) (maze.getAverageRowSize() / 5);
+        int pathMaxLength = (int) (maze.getAverageRowSize() / 10);
         List<String> directions = List.of("up", "down", "left", "right");
 
         // TODO: generate paths using algorithm
@@ -435,6 +523,10 @@ public class Maze {
             for(int i = 0; i < pathLength; i++){
                 previousNode = currentNode;
                 currentNode = currentNode.getNodeInDirection(direction);
+                if(currentNode == null){
+                    currentNode = previousNode;
+                    break;
+                }
                 availableNodes.add(currentNode);
 
                 if(pathingPossible(currentNode, previousNode)){
@@ -446,12 +538,17 @@ public class Maze {
                 }
             }
 
-            if(!pathingPossible(currentNode, null)){
+            if(noPathableDirection(currentNode)){
                 availableNodes.remove(currentNode);
             }
 
+            if(availableNodes.size()==0){
+                break;
+            }
             int randomIndex = (int) (Math.random() * (availableNodes.size()-1));
             currentNode = availableNodes.get(randomIndex);
+
+            System.out.println(availableNodes.size());
 
         }
 
@@ -460,16 +557,32 @@ public class Maze {
 
     }
 
+    private static boolean noPathableDirection(MazeNode currentNode) {
+        List<MazeNode> adjacentNodes = currentNode.getAdjacentNodes();
+
+        int counter = 0;
+
+        for (MazeNode node : adjacentNodes) {
+            if(pathingPossible(node, currentNode)){
+                counter+=1;
+            }
+        }
+
+        return counter == 0;
+    }
+
     private static boolean pathingPossible(MazeNode currentNode, MazeNode previousNode) {
-        if(currentNode == null){
+        if(currentNode == null || !currentNode.isWall()){
             return false;
         }
 
         List<MazeNode> surroundingNodes = currentNode.getSurroundingNodes();
         surroundingNodes.remove(previousNode);
-        surroundingNodes.removeAll(previousNode.getAdjacentPaths());
+        if(previousNode != null){
+            surroundingNodes.removeAll(previousNode.getAdjacentNodes());
+        }
 
-        if(surroundingNodes.size()>8 || surroundingNodes.size()<6){
+        if(surroundingNodes.size()>8 || surroundingNodes.size()<5){
             return false;
         }
 

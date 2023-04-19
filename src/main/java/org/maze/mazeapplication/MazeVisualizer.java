@@ -15,7 +15,7 @@ public class MazeVisualizer extends Application {
     @Override
     public void start(Stage stage) {
 
-        Maze maze = Maze.generateCircularMaze(20);
+        Maze maze = Maze.generateCircularMaze(65);
         Maze.generateMazePaths(maze);
         Scene scene = parseMaze(maze);
 
@@ -58,21 +58,19 @@ public class MazeVisualizer extends Application {
                     int x = (nodeX - minX) * NODE_SIZE;
                     int y = (nodeY - minY) * NODE_SIZE;
                     Rectangle rect = new Rectangle(x, y, NODE_SIZE, NODE_SIZE);
-                    if (node.isWall()) {
-                        rect.setFill(Color.BLACK);
-                    }
-                    else if (!node.isWall()){
-                        rect.setFill(Color.BEIGE);
-                    }
-                    else if (node.equals(entrance)) {
-                        rect.setFill(Color.GREEN);
+                    if (node.equals(entrance)) {
+                        rect.setFill(Color.RED);
                     }
                     else if (node.equals(exit)) {
-                        rect.setFill(Color.PINK);
+                        rect.setFill(Color.RED);
+                    }
+                    else if (node.isWall()) {
+                        rect.setFill(Color.BLACK);
                     }
                     else {
                         rect.setFill(Color.WHITE);
                     }
+
                     pane.getChildren().add(rect);
                 }
             }
